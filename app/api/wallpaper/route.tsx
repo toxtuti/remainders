@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
           {/* 하단 문구 */}
           <div style={{
             position: 'absolute',
-            top: '82%',
+            top: '81%',
             left: 0,
             width: '100%',
             display: 'flex',
