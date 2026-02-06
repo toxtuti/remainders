@@ -1,47 +1,44 @@
 /**
- * Wallpaper API Route (Customized for Jieun)
- * 지은님의 소프트 라이트 모드 색상을 강제로 적용합니다.
+ * Wallpaper API Route (Node.js Version)
+ * 엔진을 'nodejs'로 변경하여 고급형 뷰(색상 적용)가 정상 작동하도록 수정했습니다.
  */
 
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 
-// 고급형 뷰(Enhanced)를 가져와서 색상을 입힙니다.
+// 고급형 뷰 가져오기
 import LifeView from './life-view-enhanced';
 import YearView from './year-view-enhanced';
 
-export const runtime = 'edge';
+// 👇 여기가 핵심입니다! 'edge'를 'nodejs'로 바꿨습니다.
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
     // ─────────────────────────────────────────────────────────────
-    // [지은님 전용 색상 설정]
-    // 방금 주신 코드를 그대로 넣었습니다.
+    // [지은님 전용 설정] 소프트 라이트 모드
     // ─────────────────────────────────────────────────────────────
-    
     const myConfig = {
-      // 1. 색상 (소프트 라이트 모드)
+      // 1. 색상 (소프트 라이트)
       colors: {
-        background: '#F2F2F7', // 배경 (연회색)
-        text: '#1C1C1E',       // 텍스트 (진회색)
-        past: '#8E8E93',       // 과거 날짜 (중간 회색)
-        current: '#F4900D',    // 현재 날짜 (진한 주황)
-        future: '#C7C7CC',     // 미래 날짜 (연한 회색)
+        background: '#F2F2F7', 
+        text: '#1C1C1E',       
+        past: '#8E8E93',       
+        current: '#F4900D',    
+        future: '#C7C7CC',     
       },
-
-      // 2. 기본 정보 (생일은 1995-01-01로 설정됨)
+      // 2. 설정
       birthDate: '1995-01-01', 
-      viewMode: 'year',        // 12달 달력 (인생 보기 원하면 'life'로 변경)
-      timezone: 'Asia/Seoul',  // 한국 시간
-      
-      // 3. 레이아웃 & 폰트
+      viewMode: 'year',        
+      timezone: 'Asia/Seoul',
+      // 3. 레이아웃
       device: { width: 1320, height: 2868 },
       typography: { fontFamily: 'Inter', fontSize: 0.035, statsVisible: true },
       layout: { topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6 },
     };
     // ─────────────────────────────────────────────────────────────
 
-    // 한국 시간 계산
+    // 날짜 계산
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: myConfig.timezone,
@@ -56,7 +53,7 @@ export async function GET(request: NextRequest) {
       `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
     );
 
-    // 고급형 뷰에 넣을 재료 준비
+    // 뷰 생성용 데이터
     const viewProps = {
       width: myConfig.device.width,
       height: myConfig.device.height,
