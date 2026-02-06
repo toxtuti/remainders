@@ -1,14 +1,11 @@
 /**
- * Username-based Wallpaper API Route
- * 
- * Handles requests to /api/[username] and generates wallpapers
- * using user's saved configuration and enabled plugins from Firestore.
- * 
- * Example: /api/john -> Fetches john's config and generates wallpaper
+ * Username-based Wallpaper API Route (Hardcoded Version)
+ * 데이터베이스 연결 없이 강제로 지은님의 설정을 적용합니다.
  */
 
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
+// DB 관련 임포트는 에러 방지를 위해 남겨두거나, 사용하지 않으므로 무시합니다.
 import { getUserConfigByUsername, getPlugin } from '@/lib/firebase-server';
 import { Plugin, UserConfig } from '@/lib/types';
 import LifeView from '../wallpaper/life-view-enhanced';
@@ -24,7 +21,7 @@ export const runtime = 'nodejs';
 /**
  * Get current date in the specified timezone
  */
-function getDateInTimezone(timezone: string = 'UTC'): Date {
+function getDateInTimezone(timezone: string = 'Asia/Seoul'): Date {
   const now = new Date();
   
   const formatter = new Intl.DateTimeFormat('en-US', {
@@ -50,199 +47,77 @@ function getDateInTimezone(timezone: string = 'UTC'): Date {
   );
 }
 
-// Rate limiting map (in-memory, resets on Edge function restart)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_MAX = 100; // requests per window
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-
-function checkRateLimit(username: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(username);
-
-  if (!record || now > record.resetTime) {
-    // Create new window
-    rateLimitMap.set(username, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (record.count >= RATE_LIMIT_MAX) {
-    return false; // Rate limit exceeded
-  }
-
-  record.count++;
-  return true;
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ username: string }> }
 ) {
   try {
     const { username: rawUsername } = await params;
-    const username = rawUsername?.toLowerCase() || '';
+    const username = rawUsername?.toLowerCase() || 'jieun'; // 기본 유저네임
+
+    // ─────────────────────────────────────────────────────────────
+    // [지은님 전용 강제 설정 구역]
+    // 데이터베이스를 무시하고 이 설정으로 무조건 그립니다.
+    // ─────────────────────────────────────────────────────────────
     
-    if (!username) {
-      return new Response('Username is required', { status: 400 });
-    }
-
-    // Check rate limit
-    if (!checkRateLimit(username)) {
-      return new Response('Rate limit exceeded. Please try again later.', {
-        status: 429,
-        headers: { 'Retry-After': '60' }
-      });
-    }
-
-    // Fetch user configuration from Firestore
-    const { data: configData, error: configError } = await getUserConfigByUsername(username);
-
-    if (configError || !configData) {
-      return new Response(`User configuration not found. Please complete your setup at ${request.nextUrl.origin}/dashboard`, { 
-        status: 404,
-        headers: { 'Content-Type': 'text/plain' }
-      });
-    }
-
-    const config = configData as UserConfig;
-    
-    // Apply default values for optional fields to ensure robustness
-    config.colors = config.colors || {
-      background: '#F2F2F7',
-      past: '#8E8E93',
-      current: '#F4900D',
-      future: '#C7C7CC',
-      text: '#1C1C1E',
+    // 1. 색상 설정 (라이트 모드 + 주황색 포인트)
+    const myColors = {
+      background: '#FFFFFF', // 배경: 완전 흰색
+      text: '#000000',       // 글씨: 검정
+      current: '#F46C3F',    // 포인트: 지은님의 주황색
+      past: '#8E8E93',       // 과거: 회색
+      future: '#D1D1D6',     // 미래: 연한 회색
     };
-    
-    // Ensure nested color properties exist
-    if (config.colors) {
-      config.colors.background = config.colors.background || '#F2F2F7';
-      config.colors.past = config.colors.past || '#8E8E93';
-      config.colors.current = config.colors.current || '#F4900D';
-      config.colors.future = config.colors.future || '#C7C7CC';
-      config.colors.text = config.colors.text || '#1C1C1E';
-    }
-    
-    config.typography = config.typography || {
-      fontFamily: 'monospace',
+
+    // 2. 폰트 및 스타일
+    const myTypography = {
+      fontFamily: 'Inter',   // 폰트: 깔끔한 Inter
       fontSize: 0.035,
       statsVisible: true,
     };
-    
-    // Ensure nested typography properties exist
-    if (config.typography) {
-      config.typography.fontFamily = config.typography.fontFamily || 'monospace';
-      config.typography.fontSize = config.typography.fontSize ?? 0.035;
-      config.typography.statsVisible = config.typography.statsVisible ?? true;
-    }
-    
-    config.layout = config.layout || {
-      topPadding: 0.25,
-      bottomPadding: 0.15,
-      sidePadding: 0.18,
-      dotSpacing: 0.7,
+
+    // 3. 기기 해상도 (아이폰 고화질 기준)
+    const myDevice = {
+      width: 1320,
+      height: 2868,
+    };
+
+    // 4. 레이아웃 (여백 조절)
+    const myLayout = {
+      topPadding: 0.12,    // 위쪽 여백
+      bottomPadding: 0.15, // 아래쪽 여백
+      sidePadding: 0.08,   // 양옆 여백
+      dotSpacing: 0.6,
+    };
+
+    // 5. 핵심 설정 (생일, 뷰 모드)
+    const config: any = {
+      username: username,
+      birthDate: '1995-01-01',    // 🎂 지은님 생년월일 (여기서 수정!)
+      viewMode: 'year',           // 'year': 12달 달력 / 'life': 인생 전체 보기
+      timezone: 'Asia/Seoul',     // 한국 시간
+      
+      // 위에서 정한 값들 적용
+      colors: myColors,
+      typography: myTypography,
+      device: myDevice,
+      layout: myLayout,
+      
+      // 기타 설정
+      isMondayFirst: true,        // 월요일부터 시작
+      yearViewLayout: 'months',   // 월별로 보기
+      daysLayoutMode: 'continuous',
+      textElements: [],
+      plugins: [],
     };
     
-    // Ensure nested layout properties exist
-    if (config.layout) {
-      config.layout.topPadding = config.layout.topPadding ?? 0.25;
-      config.layout.bottomPadding = config.layout.bottomPadding ?? 0.15;
-      config.layout.sidePadding = config.layout.sidePadding ?? 0.18;
-      config.layout.dotSpacing = config.layout.dotSpacing ?? 0.7;
-    }
-    
-    config.textElements = config.textElements || [];
-    config.plugins = config.plugins || [];
-    
-    console.log('Config after defaults - colors:', config.colors);
-    
-    // Validate required fields
-    if (!config.birthDate && config.viewMode === 'life') {
-      return new Response('Birthdate is required for Life View. Please configure in dashboard.', { status: 400 });
-    }
-    
-    if (!config.device || !config.device.width || !config.device.height) {
-      return new Response('Device configuration is required. Please configure in dashboard.', { status: 400 });
-    }
-
-    // Map of available built-in plugins
-    const availablePlugins = new Map<string, Plugin>([
-      [quotesPlugin.id, quotesPlugin],
-      [habitTrackerPlugin.id, habitTrackerPlugin],
-      [moonPhasePlugin.id, moonPhasePlugin],
-    ]);
+    // ─────────────────────────────────────────────────────────────
+    // [설정 끝] 아래는 건드리지 않아도 됩니다.
+    // ─────────────────────────────────────────────────────────────
 
     // Get current date in user's timezone
-    const userTimezone = config.timezone || 'UTC';
+    const userTimezone = config.timezone || 'Asia/Seoul';
     const currentDate = getDateInTimezone(userTimezone);
-
-    // Execute plugins and collect render elements
-    const pluginRenderElements: any[] = [];
-    console.log('Executing plugins, config.plugins count:', config.plugins?.length || 0);
-    
-    for (const pluginConfig of config.plugins || []) {
-      if (!pluginConfig.enabled) {
-        console.log(`Plugin ${pluginConfig.pluginId}: disabled, skipping`);
-        continue;
-      }
-      
-      // Try to get built-in plugin first
-      let plugin = availablePlugins.get(pluginConfig.pluginId);
-      
-      // If not built-in, try to load from Firestore
-      if (!plugin) {
-        try {
-          console.log(`Loading user plugin ${pluginConfig.pluginId} from Firestore`);
-          const { data: userPlugin, error } = await getPlugin(pluginConfig.pluginId);
-          if (userPlugin && userPlugin.code) {
-            // Execute user plugin code to get the plugin object
-            const pluginFunction = new Function(
-              'return (function() { ' + userPlugin.code + '; return typeof plugin !== "undefined" ? plugin : null; })()'
-            );
-            plugin = pluginFunction();
-          } else if (error) {
-            console.error(`Error loading plugin ${pluginConfig.pluginId}:`, error);
-          }
-        } catch (error: any) {
-          console.error(`Failed to load user plugin ${pluginConfig.pluginId}:`, error);
-        }
-      }
-      
-      if (!plugin) {
-        console.log(`Plugin ${pluginConfig.pluginId}: not found`);
-        continue;
-      }
-      
-      if (!plugin.execute) {
-        console.log(`Plugin ${pluginConfig.pluginId}: no execute function`);
-        continue;
-      }
-      
-      try {
-        console.log(`Executing plugin ${pluginConfig.pluginId}`);
-        const elements = plugin.execute({
-          config: pluginConfig.config || {},
-          width: config.device.width,
-          height: config.device.height,
-          colors: config.colors,
-          typography: config.typography,
-          birthDate: config.birthDate,
-          viewMode: config.viewMode,
-          timezone: userTimezone,
-          currentDate: currentDate,
-        });
-        
-        console.log(`Plugin ${pluginConfig.pluginId} returned ${elements?.length || 0} elements`);
-        if (Array.isArray(elements)) {
-          pluginRenderElements.push(...elements);
-        }
-      } catch (error: any) {
-        console.error(`Plugin ${pluginConfig.pluginId} execution error:`, error);
-      }
-    }
-    
-    console.log('Total plugin render elements:', pluginRenderElements.length);
-    console.log('Sample plugin elements:', JSON.stringify(pluginRenderElements.slice(0, 3), null, 2));
 
     // Prepare view props
     const viewProps = {
@@ -252,11 +127,13 @@ export async function GET(
       typography: config.typography,
       layout: config.layout,
       textElements: config.textElements,
-      pluginElements: pluginRenderElements,
+      pluginElements: [], // 플러그인 끔 (오류 방지)
       currentDate: currentDate,
     };
 
     let view;
+    
+    // 뷰 모드에 따라 그림 그리기
     if (config.viewMode === 'life') {
       view = LifeView({
         ...viewProps,
