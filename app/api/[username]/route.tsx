@@ -107,20 +107,20 @@ export async function GET(
     
     // Apply default values for optional fields to ensure robustness
     config.colors = config.colors || {
-      background: '#1a1a1a',
-      past: '#FFFFFF',
-      current: '#FF6B35',
-      future: '#404040',
-      text: '#888888',
+      background: '#F2F2F7',
+      past: '#8E8E93',
+      current: '#F4900D',
+      future: '#C7C7CC',
+      text: '#1C1C1E',
     };
     
     // Ensure nested color properties exist
     if (config.colors) {
-      config.colors.background = config.colors.background || '#1a1a1a';
-      config.colors.past = config.colors.past || '#FFFFFF';
-      config.colors.current = config.colors.current || '#FF6B35';
-      config.colors.future = config.colors.future || '#404040';
-      config.colors.text = config.colors.text || '#888888';
+      config.colors.background = config.colors.background || '#F2F2F7';
+      config.colors.past = config.colors.past || '#8E8E93';
+      config.colors.current = config.colors.current || '#F4900D';
+      config.colors.future = config.colors.future || '#C7C7CC';
+      config.colors.text = config.colors.text || '#1C1C1E';
     }
     
     config.typography = config.typography || {
