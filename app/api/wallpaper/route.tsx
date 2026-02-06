@@ -6,20 +6,17 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   // ─────────────────────────────────────────────────────────────
-  // [수정] Sour Gummy 폰트 (Regular) 불러오기
+  // [수정] Sniglet (Sour Gummy 대체용 젤리 폰트) 불러오기
   // ─────────────────────────────────────────────────────────────
   let fontData = null;
   try {
-    // Sour Gummy의 정적(Static) 파일 경로를 지정합니다.
-    const res = await fetch('https://github.com/google/fonts/raw/main/ofl/sourgummy/static/SourGummy-Regular.ttf');
+    // 100% 작동하는 안정적인 경로 (Sniglet-Regular.ttf)
+    const res = await fetch('https://github.com/google/fonts/raw/main/ofl/sniglet/Sniglet-Regular.ttf');
     
     if (res.ok) {
       fontData = await res.arrayBuffer();
     } else {
-      console.error('폰트 다운로드 실패:', res.statusText);
-      // 만약 static 폴더에 없다면 메인 폴더 시도 (안전장치)
-      const retry = await fetch('https://github.com/google/fonts/raw/main/ofl/sourgummy/SourGummy%5Bwdth%2Cwght%5D.ttf');
-      if (retry.ok) fontData = await retry.arrayBuffer();
+      console.error('폰트 다운로드 실패');
     }
   } catch (e) {
     console.error('폰트 로딩 중 에러 발생:', e);
@@ -40,8 +37,8 @@ export async function GET(request: NextRequest) {
         topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6,
       },
       typography: {
-        // 폰트 이름을 'SourGummy'로 설정
-        fontFamily: fontData ? 'SourGummy' : 'sans-serif', 
+        // 폰트 이름을 'Sniglet'으로 설정 (없으면 기본 산세리프)
+        fontFamily: fontData ? 'Sniglet' : 'sans-serif', 
         fontSize: 0.035,
         statsVisible: true,
       }
@@ -99,7 +96,7 @@ export async function GET(request: NextRequest) {
             justifyContent: 'center',
             alignItems: 'center',
             fontSize: '30px',
-            fontFamily: fontData ? 'SourGummy' : 'sans-serif', // 폰트 적용
+            fontFamily: fontData ? 'Sniglet' : 'sans-serif', // 폰트 적용
             fontWeight: 'normal', 
             color: config.colors.text,
             zIndex: 10,
@@ -113,7 +110,7 @@ export async function GET(request: NextRequest) {
         height: config.height,
         fonts: fontData ? [
           {
-            name: 'SourGummy',
+            name: 'Sniglet',
             data: fontData,
             style: 'normal',
           },
