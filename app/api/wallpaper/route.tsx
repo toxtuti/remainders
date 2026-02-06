@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
           {/* 2. 그 위에 문구 얹기 */}
           <div style={{
             position: 'absolute',
-            top: '82%',
+            top: '80%',
             left: 0,
             width: '100%',
             display: 'flex',
