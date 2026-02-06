@@ -1,123 +1,116 @@
-/**
- * 100% 자립형 캘린더 코드 (외부 파일 의존성 제거됨)
- * 지은님의 '소프트 라이트 모드' + 'Year View' 전용
- */
-
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 
-// ⚠️ 중요: Vercel 무료 버전에서 가장 안정적인 'edge' 엔진을 사용합니다.
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
     // ─────────────────────────────────────────────────────────────
-    // 1. 색상 및 설정 (지은님 전용)
+    // 1. 지은님 전용 색상 및 설정
     // ─────────────────────────────────────────────────────────────
     const colors = {
-      bg: '#F2F2F7',      // 배경: 연회색
-      text: '#1C1C1E',    // 글씨: 진회색
-      past: '#8E8E93',    // 지난 날: 회색
-      current: '#F4900D', // 오늘: 주황색 포인트
-      future: '#C7C7CC',  // 미래: 연한 회색
+      bg: '#F2F2F7',       // 배경
+      text: '#1C1C1E',     // 글씨
+      past: '#8E8E93',     // 지난 날
+      current: '#F4900D',  // 오늘 (주황색)
+      future: '#C7C7CC',   // 미래
     };
 
     const width = 1320;
     const height = 2868;
-    
-    // 날짜 계산 (한국 시간)
+    const year = new Date().getFullYear();
+    const isMondayFirst = true; // 월요일부터 시작
+
+    // 한국 시간 계산
     const now = new Date();
-    const kstOffset = 9 * 60 * 60 * 1000;
-    const kstDate = new Date(now.getTime() + kstOffset);
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const kstGap = 9 * 60 * 60 * 1000;
+    const today = new Date(utc + kstGap);
     
-    const currentYear = kstDate.getUTCFullYear();
-    const currentMonth = kstDate.getUTCMonth(); // 0부터 시작
-    const currentDay = kstDate.getUTCDate();
+    // 오늘 날짜 정보
+    const currentMonth = today.getMonth(); // 0~11
+    const currentDay = today.getDate();
 
     // ─────────────────────────────────────────────────────────────
-    // 2. 화면 그리기 (HTML/CSS를 여기서 바로 만듭니다)
+    // 2. 달력 계산 로직 (요일 정렬 기능 추가)
     // ─────────────────────────────────────────────────────────────
-    
-    // 월별 날짜 수 (윤년 계산 포함)
-    const daysInMonth = [31, (currentYear % 4 === 0 && currentYear % 100 !== 0) || currentYear % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const months = [
+      { name: 'JAN', days: 31 },
+      { name: 'FEB', days: (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28 },
+      { name: 'MAR', days: 31 }, { name: 'APR', days: 30 }, { name: 'MAY', days: 31 }, { name: 'JUN', days: 30 },
+      { name: 'JUL', days: 31 }, { name: 'AUG', days: 31 }, { name: 'SEP', days: 30 }, { name: 'OCT', days: 31 },
+      { name: 'NOV', days: 30 }, { name: 'DEC', days: 31 },
+    ];
 
     return new ImageResponse(
       (
-        <div
-          style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.bg,
-            padding: '80px',
-            fontFamily: 'sans-serif',
-          }}
-        >
-          {/* 1. 상단 제목 (연도) */}
-          <div style={{ display: 'flex', marginBottom: '60px', width: '100%', justifyContent: 'center' }}>
-            <span style={{ fontSize: '120px', fontWeight: 900, color: colors.text, letterSpacing: '-5px' }}>
-              {currentYear}
-            </span>
+        <div style={{
+          height: '100%', width: '100%', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg,
+          padding: '80px 40px', fontFamily: 'sans-serif'
+        }}>
+          {/* 연도 제목 */}
+          <div style={{ fontSize: '100px', fontWeight: 900, color: colors.text, marginBottom: '60px', letterSpacing: '-0.05em' }}>
+            {year}
           </div>
 
-          {/* 2. 달력 그리드 (3열 4행) */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '50px', width: '100%' }}>
-            {monthNames.map((name, mIndex) => (
-              <div key={name} style={{ display: 'flex', flexDirection: 'column', width: '340px', marginBottom: '40px' }}>
-                {/* 월 이름 */}
-                <span style={{ fontSize: '40px', fontWeight: 'bold', color: colors.text, marginBottom: '20px', marginLeft: '10px' }}>
-                  {name}
-                </span>
-                
-                {/* 날짜 점들 */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                  {Array.from({ length: daysInMonth[mIndex] }).map((_, dIndex) => {
-                    const dayNum = dIndex + 1;
-                    
-                    // 색상 결정 로직
-                    let dotColor = colors.future; // 기본 미래
-                    
-                    // 지난 달이거나, 이번 달인데 날짜가 지났으면
-                    if (mIndex < currentMonth) {
-                      dotColor = colors.past;
-                    } else if (mIndex === currentMonth) {
-                      if (dayNum < currentDay) dotColor = colors.past;
-                      else if (dayNum === currentDay) dotColor = colors.current; // 🔥 오늘!
-                    }
+          {/* 3열 4행 그리드 */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '50px', width: '100%', maxWidth: '1200px' }}>
+            {months.map((month, mIndex) => {
+              // 해당 월 1일의 요일 계산 (0:일, 1:월 ... 6:토)
+              const firstDay = new Date(year, mIndex, 1).getDay();
+              // 월요일 시작 보정: 일(0) -> 6, 월(1) -> 0 ...
+              const startOffset = isMondayFirst ? (firstDay === 0 ? 6 : firstDay - 1) : firstDay;
 
-                    return (
-                      <div
-                        key={dIndex}
-                        style={{
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
+              return (
+                <div key={month.name} style={{ display: 'flex', flexDirection: 'column', width: '300px', marginBottom: '30px' }}>
+                  {/* 월 이름 */}
+                  <div style={{ fontSize: '32px', fontWeight: 'bold', color: colors.text, marginBottom: '20px', marginLeft: '4px' }}>
+                    {month.name}
+                  </div>
+                  
+                  {/* 날짜 그리드 (7칸씩 끊기) */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
+                    
+                    {/* 앞쪽 빈칸 (요일 맞추기용) */}
+                    {Array.from({ length: startOffset }).map((_, i) => (
+                      <div key={`empty-${i}`} style={{ width: '24px', height: '24px' }} />
+                    ))}
+
+                    {/* 날짜 점 찍기 */}
+                    {Array.from({ length: month.days }).map((_, dIndex) => {
+                      const dayNum = dIndex + 1;
+                      let dotColor = colors.future; // 기본 미래 색
+
+                      if (mIndex < currentMonth) {
+                        dotColor = colors.past; // 지난 달
+                      } else if (mIndex === currentMonth) {
+                        if (dayNum < currentDay) dotColor = colors.past; // 이번달 지난 날
+                        else if (dayNum === currentDay) dotColor = colors.current; // 🔥 오늘!
+                      }
+
+                      return (
+                        <div key={dIndex} style={{
+                          width: '24px', height: '24px', borderRadius: '50%',
                           backgroundColor: dotColor,
-                        }}
-                      />
-                    );
-                  })}
+                        }} />
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          
-          {/* 3. 하단 문구 (선택사항) */}
-          <div style={{ position: 'absolute', bottom: '100px', color: colors.text, opacity: 0.5, fontSize: '30px' }}>
+
+          {/* 하단 문구 */}
+          <div style={{ position: 'absolute', bottom: '60px', color: colors.text, opacity: 0.4, fontSize: '24px', letterSpacing: '2px' }}>
             MEMENTO MORI
           </div>
         </div>
       ),
-      {
-        width: width,
-        height: height,
-      }
+      { width, height }
     );
-  } catch (error: any) {
-    return new Response(`Error: ${error.message}`, { status: 500 });
+  } catch (e: any) {
+    return new Response(`Error: ${e.message}`, { status: 500 });
   }
 }
