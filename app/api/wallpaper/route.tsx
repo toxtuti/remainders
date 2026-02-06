@@ -5,16 +5,25 @@ import YearView from './year-view-enhanced';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // ─────────────────────────────────────────────────────────────
+  // [안전장치 1] 폰트 파일 불러오기 (실패하면 기본 폰트 사용)
+  // ─────────────────────────────────────────────────────────────
+  let fontData = null;
+  try {
+    // Times New Roman과 거의 똑같은 구글 무료 폰트 'Tinos'를 가져옵니다.
+    const res = await fetch('https://github.com/google/fonts/raw/main/apache/tinos/Tinos-Bold.ttf');
+    if (res.ok) {
+      fontData = await res.arrayBuffer();
+    } else {
+      console.error('폰트 다운로드 실패:', res.statusText);
+    }
+  } catch (e) {
+    console.error('폰트 로딩 중 에러 발생 (기본 폰트로 대체합니다):', e);
+  }
+
   try {
     // ─────────────────────────────────────────────────────────────
-    // [핵심] 서버에 폰트 파일 다운로드 및 주입
-    // ─────────────────────────────────────────────────────────────
-    const fontData = await fetch(
-      new URL('https://github.com/google/fonts/raw/main/ofl/notoserif/NotoSerif-Bold.ttf', import.meta.url)
-    ).then((res) => res.arrayBuffer());
-
-    // ─────────────────────────────────────────────────────────────
-    // 1. 색상 및 설정
+    // [설정] 색상 및 디자인
     // ─────────────────────────────────────────────────────────────
     const config = {
       width: 1320,
@@ -30,8 +39,8 @@ export async function GET(request: NextRequest) {
         topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6,
       },
       typography: {
-        // 👇 여기서 지정한 이름을 아래 fonts 설정과 맞춰줍니다.
-        fontFamily: 'MySerif', 
+        // 폰트가 있으면 'MySerif'를 쓰고, 없으면 시스템 기본 명조체(serif)를 씁니다.
+        fontFamily: fontData ? 'MySerif' : 'serif', 
         fontSize: 0.035,
         statsVisible: true,
       }
@@ -53,7 +62,7 @@ export async function GET(request: NextRequest) {
     );
 
     // ─────────────────────────────────────────────────────────────
-    // 2. 화면 구성
+    // [화면 구성]
     // ─────────────────────────────────────────────────────────────
     const calendarView = YearView({
       width: config.width,
@@ -91,9 +100,8 @@ export async function GET(request: NextRequest) {
             justifyContent: 'center',
             alignItems: 'center',
             fontSize: '30px',
-            // 👇 폰트 적용
-            fontFamily: 'MySerif',
-            fontWeight: 'bold', // 폰트 파일 자체가 Bold라 효과 적용됨
+            fontFamily: fontData ? 'MySerif' : 'serif', // 폰트 적용
+            fontWeight: 'bold',
             color: config.colors.text,
             zIndex: 10,
           }}>
@@ -104,19 +112,20 @@ export async function GET(request: NextRequest) {
       {
         width: config.width,
         height: config.height,
-        // 👇 [중요] 폰트 파일을 여기서 실제로 등록합니다!
-        fonts: [
+        // 폰트가 성공적으로 로드되었을 때만 등록합니다. (오류 방지)
+        fonts: fontData ? [
           {
             name: 'MySerif',
             data: fontData,
             style: 'normal',
           },
-        ],
+        ] : undefined,
       }
     );
 
   } catch (error: any) {
     console.error(error);
+    // 최악의 경우에도 500 에러 대신 에러 메시지를 그림으로 보여줍니다.
     return new Response(`Error: ${error.message}`, { status: 500 });
   }
 }
