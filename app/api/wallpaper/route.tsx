@@ -1,6 +1,7 @@
 /**
- * Final Version with Custom Text
- * 원래 디자인 + 색상 변경 + 하단 문구 추가
+ * Final Version: Times New Roman Style
+ * 폰트: Times New Roman (전체 적용)
+ * 문구 크기: 30px
  */
 
 import { ImageResponse } from '@vercel/og';
@@ -33,7 +34,10 @@ export async function GET(request: NextRequest) {
       },
       
       typography: {
-        fontFamily: 'Inter', fontSize: 0.035, statsVisible: true,
+        // 👇 [수정 1] 달력 숫자 폰트를 Times New Roman으로 변경
+        fontFamily: '"Times New Roman", serif', 
+        fontSize: 0.035, 
+        statsVisible: true,
       }
     };
 
@@ -54,7 +58,7 @@ export async function GET(request: NextRequest) {
     );
 
     // ─────────────────────────────────────────────────────────────
-    // 2. 화면 구성 (달력 + 문구 합치기)
+    // 2. 화면 구성
     // ─────────────────────────────────────────────────────────────
 
     // (1) 달력 만들기
@@ -85,20 +89,21 @@ export async function GET(request: NextRequest) {
           {/* 1. 배경에 달력 깔기 */}
           {calendarView}
 
-          {/* 2. 그 위에 문구 얹기 (위치: 82%) */}
+          {/* 2. 그 위에 문구 얹기 */}
           <div style={{
             position: 'absolute',
-            top: '82%',  // 👈 요청하신 위치 (0이 위, 100이 아래일 때 82)
+            top: '82%',
             left: 0,
             width: '100%',
             display: 'flex',
-            justifyContent: 'center', // 가운데 정렬
+            justifyContent: 'center',
             alignItems: 'center',
-            fontSize: '42px',         // 글씨 크기 (적당히 키움)
+            // 👇 [수정 2] 요청하신 대로 크기 30, 폰트 Times New Roman 적용
+            fontSize: '30px',         
+            fontFamily: '"Times New Roman", serif',
             fontWeight: 'bold',
-            fontFamily: 'sans-serif', // 혹은 'Inter'
-            color: config.colors.text,// 글씨 색상 (진회색)
-            zIndex: 10,               // 달력보다 위에 오도록
+            color: config.colors.text,
+            zIndex: 10,
           }}>
             🧡 STEP UP 🏐 TO WIN 🧡
           </div>
