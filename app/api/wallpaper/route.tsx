@@ -6,16 +6,20 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   // ─────────────────────────────────────────────────────────────
-  // [수정] 얇은 폰트(Regular) 파일 불러오기
+  // [수정] Sour Gummy 폰트 (Regular) 불러오기
   // ─────────────────────────────────────────────────────────────
   let fontData = null;
   try {
-    // Tinos-Bold.ttf 대신 Tinos-Regular.ttf를 가져옵니다.
-    const res = await fetch('https://github.com/google/fonts/raw/main/apache/tinos/Tinos-Regular.ttf');
+    // Sour Gummy의 정적(Static) 파일 경로를 지정합니다.
+    const res = await fetch('https://github.com/google/fonts/raw/main/ofl/sourgummy/static/SourGummy-Regular.ttf');
+    
     if (res.ok) {
       fontData = await res.arrayBuffer();
     } else {
       console.error('폰트 다운로드 실패:', res.statusText);
+      // 만약 static 폴더에 없다면 메인 폴더 시도 (안전장치)
+      const retry = await fetch('https://github.com/google/fonts/raw/main/ofl/sourgummy/SourGummy%5Bwdth%2Cwght%5D.ttf');
+      if (retry.ok) fontData = await retry.arrayBuffer();
     }
   } catch (e) {
     console.error('폰트 로딩 중 에러 발생:', e);
@@ -36,8 +40,8 @@ export async function GET(request: NextRequest) {
         topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6,
       },
       typography: {
-        // 폰트 적용
-        fontFamily: fontData ? 'MySerif' : 'serif', 
+        // 폰트 이름을 'SourGummy'로 설정
+        fontFamily: fontData ? 'SourGummy' : 'sans-serif', 
         fontSize: 0.035,
         statsVisible: true,
       }
@@ -58,6 +62,7 @@ export async function GET(request: NextRequest) {
       `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
     );
 
+    // 달력 화면 구성
     const calendarView = YearView({
       width: config.width,
       height: config.height,
@@ -87,15 +92,14 @@ export async function GET(request: NextRequest) {
           {/* 하단 문구 */}
           <div style={{
             position: 'absolute',
-            top: '81%',
+            top: '82%',
             left: 0,
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             fontSize: '30px',
-            fontFamily: fontData ? 'MySerif' : 'serif',
-            // 👇 [수정] 굵기를 'normal'로 변경
+            fontFamily: fontData ? 'SourGummy' : 'sans-serif', // 폰트 적용
             fontWeight: 'normal', 
             color: config.colors.text,
             zIndex: 10,
@@ -109,7 +113,7 @@ export async function GET(request: NextRequest) {
         height: config.height,
         fonts: fontData ? [
           {
-            name: 'MySerif',
+            name: 'SourGummy',
             data: fontData,
             style: 'normal',
           },
