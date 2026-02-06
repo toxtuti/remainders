@@ -6,13 +6,11 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   // ─────────────────────────────────────────────────────────────
-  // [수정] Sniglet (Sour Gummy 대체용 젤리 폰트) 불러오기
+  // [폰트] Sniglet (귀여운 젤리 폰트)
   // ─────────────────────────────────────────────────────────────
   let fontData = null;
   try {
-    // 100% 작동하는 안정적인 경로 (Sniglet-Regular.ttf)
     const res = await fetch('https://github.com/google/fonts/raw/main/ofl/sniglet/Sniglet-Regular.ttf');
-    
     if (res.ok) {
       fontData = await res.arrayBuffer();
     } else {
@@ -37,7 +35,6 @@ export async function GET(request: NextRequest) {
         topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6,
       },
       typography: {
-        // 폰트 이름을 'Sniglet'으로 설정 (없으면 기본 산세리프)
         fontFamily: fontData ? 'Sniglet' : 'sans-serif', 
         fontSize: 0.035,
         statsVisible: true,
@@ -59,7 +56,6 @@ export async function GET(request: NextRequest) {
       `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
     );
 
-    // 달력 화면 구성
     const calendarView = YearView({
       width: config.width,
       height: config.height,
@@ -89,14 +85,15 @@ export async function GET(request: NextRequest) {
           {/* 하단 문구 */}
           <div style={{
             position: 'absolute',
-            top: '82%',
+            // 👇 [수정] 82% -> 81%로 위치 상향 조정
+            top: '81%',
             left: 0,
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             fontSize: '30px',
-            fontFamily: fontData ? 'Sniglet' : 'sans-serif', // 폰트 적용
+            fontFamily: fontData ? 'Sniglet' : 'sans-serif',
             fontWeight: 'normal', 
             color: config.colors.text,
             zIndex: 10,
