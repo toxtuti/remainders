@@ -1,47 +1,43 @@
-/**
- * Final Version: Times New Roman Style
- * 폰트: Times New Roman (전체 적용)
- * 문구 크기: 30px
- */
-
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
-
-// 원래 디자인 파일 불러오기
-import YearView from './year-view-enhanced'; 
+import YearView from './year-view-enhanced';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
     // ─────────────────────────────────────────────────────────────
+    // [핵심] 서버에 폰트 파일 다운로드 및 주입
+    // ─────────────────────────────────────────────────────────────
+    const fontData = await fetch(
+      new URL('https://github.com/google/fonts/raw/main/ofl/notoserif/NotoSerif-Bold.ttf', import.meta.url)
+    ).then((res) => res.arrayBuffer());
+
+    // ─────────────────────────────────────────────────────────────
     // 1. 색상 및 설정
     // ─────────────────────────────────────────────────────────────
     const config = {
       width: 1320,
       height: 2868,
-      
       colors: {
-        background: '#F2F2F7',  // 배경
-        text: '#1C1C1E',        // 글씨
-        past: '#8E8E93',        // 지난 날
-        current: '#F4900D',     // 오늘 (주황색)
-        future: '#C7C7CC',      // 미래
+        background: '#F2F2F7',
+        text: '#1C1C1E',
+        past: '#8E8E93',
+        current: '#F4900D',
+        future: '#C7C7CC',
       },
-      
       layout: {
         topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6,
       },
-      
       typography: {
-        // 👇 [수정 1] 달력 숫자 폰트를 Times New Roman으로 변경
-        fontFamily: '"Times New Roman", serif', 
-        fontSize: 0.035, 
+        // 👇 여기서 지정한 이름을 아래 fonts 설정과 맞춰줍니다.
+        fontFamily: 'MySerif', 
+        fontSize: 0.035,
         statsVisible: true,
       }
     };
 
-    // 날짜 계산 (한국 시간)
+    // 날짜 계산
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Seoul',
@@ -52,7 +48,6 @@ export async function GET(request: NextRequest) {
     const parts = formatter.formatToParts(now);
     const dateParts: Record<string, string> = {};
     parts.forEach(({ type, value }) => dateParts[type] = value);
-    
     const currentDate = new Date(
       `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
     );
@@ -60,8 +55,6 @@ export async function GET(request: NextRequest) {
     // ─────────────────────────────────────────────────────────────
     // 2. 화면 구성
     // ─────────────────────────────────────────────────────────────
-
-    // (1) 달력 만들기
     const calendarView = YearView({
       width: config.width,
       height: config.height,
@@ -79,29 +72,28 @@ export async function GET(request: NextRequest) {
 
     return new ImageResponse(
       (
-        <div style={{ 
-          position: 'relative', 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          backgroundColor: config.colors.background 
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          backgroundColor: config.colors.background,
         }}>
-          {/* 1. 배경에 달력 깔기 */}
           {calendarView}
 
-          {/* 2. 그 위에 문구 얹기 */}
+          {/* 하단 문구 */}
           <div style={{
             position: 'absolute',
-            top: '80%',
+            top: '82%',
             left: 0,
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            // 👇 [수정 2] 요청하신 대로 크기 30, 폰트 Times New Roman 적용
-            fontSize: '30px',         
-            fontFamily: '"Times New Roman", serif',
-            fontWeight: 'bold',
+            fontSize: '30px',
+            // 👇 폰트 적용
+            fontFamily: 'MySerif',
+            fontWeight: 'bold', // 폰트 파일 자체가 Bold라 효과 적용됨
             color: config.colors.text,
             zIndex: 10,
           }}>
@@ -112,6 +104,14 @@ export async function GET(request: NextRequest) {
       {
         width: config.width,
         height: config.height,
+        // 👇 [중요] 폰트 파일을 여기서 실제로 등록합니다!
+        fonts: [
+          {
+            name: 'MySerif',
+            data: fontData,
+            style: 'normal',
+          },
+        ],
       }
     );
 
