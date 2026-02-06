@@ -1,28 +1,25 @@
 /**
- * Original Layout with Custom Colors
- * 원래 디자인 파일(year-view-enhanced)을 사용하고 색상만 변경합니다.
+ * Final Version with Custom Text
+ * 원래 디자인 + 색상 변경 + 하단 문구 추가
  */
 
 import { ImageResponse } from '@vercel/og';
 import { NextRequest } from 'next/server';
 
-// 👇 원래 디자인 파일을 불러옵니다. (같은 폴더에 있는 파일)
+// 원래 디자인 파일 불러오기
 import YearView from './year-view-enhanced'; 
 
-// ⚠️ 중요: 고급형 디자인은 계산이 많아서 'nodejs' 엔진이 필요합니다.
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
     // ─────────────────────────────────────────────────────────────
-    // [설정 구역] 여기에 원하시는 색상을 넣었습니다.
+    // 1. 색상 및 설정
     // ─────────────────────────────────────────────────────────────
     const config = {
-      // 화면 크기 (아이폰 고화질)
       width: 1320,
       height: 2868,
       
-      // 🎨 지은님의 소프트 라이트 모드 색상
       colors: {
         background: '#F2F2F7',  // 배경
         text: '#1C1C1E',        // 글씨
@@ -31,23 +28,16 @@ export async function GET(request: NextRequest) {
         future: '#C7C7CC',      // 미래
       },
       
-      // 레이아웃 설정 (원래 디자인 비율 유지)
       layout: {
-        topPadding: 0.12,
-        bottomPadding: 0.15,
-        sidePadding: 0.08,
-        dotSpacing: 0.6,
+        topPadding: 0.12, bottomPadding: 0.15, sidePadding: 0.08, dotSpacing: 0.6,
       },
       
-      // 폰트 설정
       typography: {
-        fontFamily: 'Inter',
-        fontSize: 0.035,
-        statsVisible: true,
+        fontFamily: 'Inter', fontSize: 0.035, statsVisible: true,
       }
     };
 
-    // 날짜 계산 (한국 시간 적용)
+    // 날짜 계산 (한국 시간)
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Seoul',
@@ -63,8 +53,12 @@ export async function GET(request: NextRequest) {
       `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
     );
 
-    // 👇 '원래 디자인 파일'에게 우리 설정값을 전달합니다.
-    const viewElement = YearView({
+    // ─────────────────────────────────────────────────────────────
+    // 2. 화면 구성 (달력 + 문구 합치기)
+    // ─────────────────────────────────────────────────────────────
+
+    // (1) 달력 만들기
+    const calendarView = YearView({
       width: config.width,
       height: config.height,
       colors: config.colors,
@@ -72,17 +66,49 @@ export async function GET(request: NextRequest) {
       typography: config.typography,
       currentDate: currentDate,
       timezone: 'Asia/Seoul',
-      isMondayFirst: true,          // 월요일부터 시작
-      yearViewLayout: 'months',     // 월별 보기
+      isMondayFirst: true,
+      yearViewLayout: 'months',
       daysLayoutMode: 'continuous',
       textElements: [],
       pluginElements: []
     });
 
-    return new ImageResponse(viewElement, {
-      width: config.width,
-      height: config.height,
-    });
+    return new ImageResponse(
+      (
+        <div style={{ 
+          position: 'relative', 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          backgroundColor: config.colors.background 
+        }}>
+          {/* 1. 배경에 달력 깔기 */}
+          {calendarView}
+
+          {/* 2. 그 위에 문구 얹기 (위치: 82%) */}
+          <div style={{
+            position: 'absolute',
+            top: '82%',  // 👈 요청하신 위치 (0이 위, 100이 아래일 때 82)
+            left: 0,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center', // 가운데 정렬
+            alignItems: 'center',
+            fontSize: '42px',         // 글씨 크기 (적당히 키움)
+            fontWeight: 'bold',
+            fontFamily: 'sans-serif', // 혹은 'Inter'
+            color: config.colors.text,// 글씨 색상 (진회색)
+            zIndex: 10,               // 달력보다 위에 오도록
+          }}>
+            🧡 STEP UP 🏐 TO WIN 🧡
+          </div>
+        </div>
+      ),
+      {
+        width: config.width,
+        height: config.height,
+      }
+    );
 
   } catch (error: any) {
     console.error(error);
