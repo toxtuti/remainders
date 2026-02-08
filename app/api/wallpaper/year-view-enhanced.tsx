@@ -1,6 +1,6 @@
 /**
- * Year View Component - Custom Colors Updated
- * 가독성을 위해 더 진한 초록색(#4DB361)과 쨍한 보라색(#BE5CFF)을 적용했습니다.
+ * Year View Component - Pastel Colors Updated
+ * 은은한 초록(#6DC07D), 연보라(#AB8FFF), 맑은 파랑(#5CA3FF) 적용 완료!
  */
 
 import { TextElement } from '@/lib/types';
@@ -71,26 +71,26 @@ export default function YearView({
 }: YearViewProps) {
   
   // ─────────────────────────────────────────────────────────────
-  // [1] 수정된 색상 적용 (잘 보이는 색으로 변경 완료!)
+  // [1] 수정된 색상 적용 (은은한 파스텔톤)
   // ─────────────────────────────────────────────────────────────
   const SPECIAL_DATES: Record<string, string> = {
-    // 💚 기존 살구색 날짜 -> 선명한 초록색 (#4DB361)
-    '2026-01-04': '#4DB361',
-    '2026-01-09': '#4DB361',
-    '2026-03-27': '#4DB361',
-    '2026-05-22': '#4DB361',
-    '2026-11-19': '#4DB361',
+    // 💚 연한 초록 (#6DC07D)
+    '2026-01-04': '#6DC07D',
+    '2026-01-09': '#6DC07D',
+    '2026-03-27': '#6DC07D',
+    '2026-05-22': '#6DC07D',
+    '2026-11-19': '#6DC07D',
 
-    // 💙 진한 파랑 (그대로 유지, #00498c)
-    '2026-03-28': '#00498c',
-    '2026-10-31': '#00498c',
+    // 💙 연한 파랑/네이비 (#5CA3FF)
+    '2026-03-28': '#5CA3FF',
+    '2026-10-31': '#5CA3FF',
 
-    // 💜 연한 보라 -> 쨍한 네온 보라 (#BE5CFF)
-    '2026-03-26': '#BE5CFF',
+    // 💜 연한 보라 (#AB8FFF)
+    '2026-03-26': '#AB8FFF',
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 날짜 계산 및 달력 그리기 로직 (건드리지 않음)
+  // 날짜 계산 및 달력 그리기 로직 (그대로 유지)
   // ─────────────────────────────────────────────────────────────
   const date = currentDate;
   const currentYear = date.getFullYear();
@@ -169,20 +169,18 @@ export default function YearView({
       if (dayNum > 0 && dayNum <= daysInMonth) {
         globalDayCounter++;
         
-        // 날짜 키 생성
         const dateKey = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 
-        // 🎨 색상 적용 우선순위
         if (globalDayCounter < currentDayOfYear) {
-          color = colors.past; // 과거
+          color = colors.past; 
         } else if (globalDayCounter === currentDayOfYear) {
-          color = colors.current; // 오늘
+          color = colors.current; 
         } else {
-          // 미래: 기념일 체크
+          // 기념일 체크
           if (SPECIAL_DATES[dateKey]) {
-            color = SPECIAL_DATES[dateKey]; // ✨ 새 색상 적용!
+            color = SPECIAL_DATES[dateKey]; 
           } else {
-            color = colors.future; // 일반 미래
+            color = colors.future; 
           }
         }
       }
