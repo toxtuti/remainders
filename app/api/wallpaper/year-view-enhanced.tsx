@@ -1,6 +1,6 @@
 /**
- * Year View Component - Jieun's Custom Version
- * 살구색, 파랑색, 보라색 기념일을 직접 그립니다.
+ * Year View Component - Custom Colors Updated
+ * 가독성을 위해 더 진한 초록색(#4DB361)과 쨍한 보라색(#BE5CFF)을 적용했습니다.
  */
 
 import { TextElement } from '@/lib/types';
@@ -71,35 +71,32 @@ export default function YearView({
 }: YearViewProps) {
   
   // ─────────────────────────────────────────────────────────────
-  // [1] 여기에 지은님의 특별한 날짜들을 입력했습니다!
+  // [1] 수정된 색상 적용 (잘 보이는 색으로 변경 완료!)
   // ─────────────────────────────────────────────────────────────
   const SPECIAL_DATES: Record<string, string> = {
-    // 🧡 살구색 (#fb9b82)
-    '2026-01-04': '#fb9b82',
-    '2026-01-09': '#fb9b82',
-    '2026-03-27': '#fb9b82',
-    '2026-05-22': '#fb9b82',
-    '2026-11-19': '#fb9b82',
+    // 💚 기존 살구색 날짜 -> 선명한 초록색 (#4DB361)
+    '2026-01-04': '#4DB361',
+    '2026-01-09': '#4DB361',
+    '2026-03-27': '#4DB361',
+    '2026-05-22': '#4DB361',
+    '2026-11-19': '#4DB361',
 
-    // 💙 진한 파랑 (#00498c)
+    // 💙 진한 파랑 (그대로 유지, #00498c)
     '2026-03-28': '#00498c',
     '2026-10-31': '#00498c',
 
-    // 💜 연한 보라 (#C4BFE3)
-    '2026-03-26': '#C4BFE3',
+    // 💜 연한 보라 -> 쨍한 네온 보라 (#BE5CFF)
+    '2026-03-26': '#BE5CFF',
   };
 
   // ─────────────────────────────────────────────────────────────
-  // 기본 날짜 계산 로직
+  // 날짜 계산 및 달력 그리기 로직 (건드리지 않음)
   // ─────────────────────────────────────────────────────────────
   const date = currentDate;
   const currentYear = date.getFullYear();
   const currentDayOfYear = getCurrentDayOfYear(timezone);
   const daysLeft = calculateDaysLeftInYear(timezone);
   const totalDays = getTotalDaysInCurrentYear();
-
-  // (Days View 로직은 생략하고, 바로 아래 Months View로 넘어갑니다)
-  // 지은님은 달력형(Months)을 쓰시니까요!
 
   // Grid Layout Config (Months View)
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -159,16 +156,12 @@ export default function YearView({
 
   let globalDayCounter = 0;
 
-  // ─────────────────────────────────────────────────────────────
-  // [2] 여기서 달력을 그립니다!
-  // ─────────────────────────────────────────────────────────────
   const monthCells = MONTHS.map((monthName, monthIndex) => {
     const daysInMonth = getDaysInMonth(currentYear, monthIndex);
     const startDay = getFirstDayOfMonth(currentYear, monthIndex);
 
     const dots = [];
 
-    // 42칸 (7일 * 6주) 그리드 채우기
     for (let i = 0; i < 42; i++) {
       const dayNum = i - startDay + 1;
       let color = 'transparent';
@@ -176,22 +169,20 @@ export default function YearView({
       if (dayNum > 0 && dayNum <= daysInMonth) {
         globalDayCounter++;
         
-        // 날짜 키 생성 (예: '2026-03-27')
+        // 날짜 키 생성
         const dateKey = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 
-        // 🎨 색상 결정 로직 (여기가 핵심!)
+        // 🎨 색상 적용 우선순위
         if (globalDayCounter < currentDayOfYear) {
-          // 1. 과거면 무조건 회색
-          color = colors.past;
+          color = colors.past; // 과거
         } else if (globalDayCounter === currentDayOfYear) {
-          // 2. 오늘이면 무조건 주황색 (colors.current)
-          color = colors.current;
+          color = colors.current; // 오늘
         } else {
-          // 3. 미래일 때만 기념일 체크!
+          // 미래: 기념일 체크
           if (SPECIAL_DATES[dateKey]) {
-            color = SPECIAL_DATES[dateKey]; // ✨ 지정한 색상!
+            color = SPECIAL_DATES[dateKey]; // ✨ 새 색상 적용!
           } else {
-            color = colors.future; // 없으면 기본 미래색
+            color = colors.future; // 일반 미래
           }
         }
       }
@@ -217,7 +208,6 @@ export default function YearView({
       }
     }
 
-    // 월 배치
     const colIndex = monthIndex % COLUMNS;
     const rowIndex = Math.floor(monthIndex / COLUMNS);
 
@@ -278,7 +268,6 @@ export default function YearView({
         {monthCells}
       </div>
 
-      {/* 하단 통계 (몇 일 남았는지) */}
       {typography.statsVisible && (
         <div
           style={{
@@ -299,11 +288,9 @@ export default function YearView({
         </div>
       )}
 
-      {/* 추가 텍스트 요소들 (플러그인) */}
       {textElements.map((element) => {
         if (!element.visible || element.content == null) return null;
-        // ... (기존 코드 유지)
-        return null; // (간략화)
+        return null;
       })}
     </div>
   );
